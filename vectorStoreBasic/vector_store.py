@@ -52,4 +52,19 @@ class VectorStore:
                 self.vector_index[existing_id] = {}
             self.vector_index[existing_id][vector_id] = similarity
 
-        def find_similar_vestors: 
+    def find_similar_vectors(self, query_vector, num_results=5):
+        '''
+        find nearest vectors to the query vector i.e. nearest neighbors.
+        returns: list of tuples (vector_id, similarity_score) for similar vectors.
+        param: query_vector: numpy.narray vector to find similar vectors to.
+        param: num_results: int: number of nearest neighbors to return.
+        '''
+        results = []
+        for vector_id, vector in self.vector_data.items():
+            # TODO Fix RuntimeWarning: invalid value encountered in scalar divide
+            similarity = np.dot(query_vector, vector) / (np.linalg.norm(query_vector) * np.linalg.norm(vector))
+            results.append((vector_id, similarity))
+
+        results.sort(key=lambda x: x[1], reverse=True)
+
+        return results[:num_results]
