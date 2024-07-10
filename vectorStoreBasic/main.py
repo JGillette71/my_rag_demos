@@ -56,6 +56,7 @@ def similarity_search(query_sentence: str, vocab: set, token_index: dict, num_re
     return similar_sentences
 
 # begin processing 
+print("initializing application, this may take a minute...")
 
 # instantiate VectorStore
 vector_store = VectorStore()
@@ -85,14 +86,20 @@ sentence_vectors = vectorization(sentences, vocab, indexed_tokens)
 for sentence, vector in sentence_vectors.items():
     vector_store.add_vector(sentence, vector)
 
-# TODO make query persist
+# Query Phase (can be repeated multiple times)
 
-search_pattern = input("Enter a string to query: ")
+def query_loop():
+    while True:
+        search_pattern = input("Enter a string to query (or type 'exit' to quit): ")
+        if search_pattern.lower() == 'exit':
+            break
+        results = similarity_search(
+            query_sentence=search_pattern, 
+            vocab=vocab, 
+            token_index=indexed_tokens, 
+            num_results=3
+        )
+        print("Results:", results)
 
-results = similarity_search(query_sentence = search_pattern, 
-                            vocab = vocab, 
-                            token_index = indexed_tokens, 
-                            num_results = 3
-                            )
-
-print(results)
+# Run the query loop
+query_loop()

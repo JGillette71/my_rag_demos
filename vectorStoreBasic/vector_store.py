@@ -40,6 +40,27 @@ class VectorStore:
         '''
         return self.vector_data.get(vector_id)
     
+    def calculate_similarity(self, vector_a, vector_b):
+        '''
+        Fixes RuntimeWarning: invalid value encountered in scalar divide
+        returns:
+        params:
+        '''
+        vector_a_norm = np.linalg.norm(vector_a)
+        vector_b_norm = np.linalg.norm(vector_b)
+        
+        if vector_a_norm == 0 or vector_b_norm == 0:
+            return 0  # Similarity is zero if either vector is a zero vector
+        
+        if np.isnan(vector_a_norm) or np.isnan(vector_b_norm):
+            return 0  # Similarity is zero if any norm is NaN
+        
+        if np.isinf(vector_a_norm) or np.isinf(vector_b_norm):
+            return 0  # Similarity is zero if any norm is infinite
+        
+        similarity = np.dot(vector_a, vector_b) / (vector_a_norm * vector_b_norm)
+        return similarity
+    
     def update_index(self, vector_id, vector):
         '''
         update the index for each new vector upon ingest
@@ -47,7 +68,8 @@ class VectorStore:
         vector: numpy.narray vector to be stored
         '''
         for existing_id, existing_vector in self.vector_data.items():
-            similarity = np.dot(vector, existing_vector) / (np.linalg.norm(vector)) * (np.linalg.norm(existing_vector))
+            similarity = self.calculate_similarity(vector, existing_vector)
+            #similarity = np.dot(vector, existing_vector) / (np.linalg.norm(vector)) * (np.linalg.norm(existing_vector))
             if existing_id not in self.vector_index:
                 self.vector_index[existing_id] = {}
             self.vector_index[existing_id][vector_id] = similarity
@@ -61,8 +83,8 @@ class VectorStore:
         '''
         results = []
         for vector_id, vector in self.vector_data.items():
-            # TODO Fix RuntimeWarning: invalid value encountered in scalar divide
-            similarity = np.dot(query_vector, vector) / (np.linalg.norm(query_vector) * np.linalg.norm(vector))
+            # similarity = np.dot(query_vector, vector) / (np.linalg.norm(query_vector) * np.linalg.norm(vector))
+            similarity = self.calculate_similarity(query_vector, vector)
             results.append((vector_id, similarity))
 
         results.sort(key=lambda x: x[1], reverse=True)
